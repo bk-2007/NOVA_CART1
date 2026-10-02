@@ -1,0 +1,310 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String           @id @default(cuid())
+  email          String           @unique
+  name           String
+  phone          String?
+  role           String           @default("CUSTOMER") // CUSTOMER | STORE_MANAGER | OPERATIONS | EXECUTIVE
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  orders         Order[]
+  behavior       CustomerBehavior?
+  supportTickets SupportTicket[]
+  coupons        Coupon[]
+  recommendations Recommendation[]
+}
+
+model Store {
+  id                      String           @id @default(cuid())
+  name                    String
+  locality                String
+  city                    String           @default("Bengaluru")
+  address                 String
+  contactPhone            String?
+  rating                  Float            @default(4.5)
+  historicalFulfillmentRate Float          @default(0.95)
+  avgDeliveryMinutes      Int              @default(30)
+  rejectionRate           Float            @default(0.05)
+  isOnline                Boolean          @default(true)
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
+  inventories             Inventory[]
+  orders                  Order[]
+  events                  InventoryEvent[]
+  metrics                 StoreMetric[]
+
+  @@index([locality])
+}
+
+model Product {
+  id             String           @id @default(cuid())
+  sku            String           @unique
+  name           String
+  brand          String
+  category       String           // Dairy, Fresh Produce, Bakery, Staples, Beverages, Snacks
+  unit           String           // 1L, 500g, 1kg, Pack of 4
+  mrp            Float
+  price          Float
+  description    String?
+  imageUrl       String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  inventories    Inventory[]
+  orderItems     OrderItem[]
+  events         InventoryEvent[]
+  recommendationsAsOriginal Recommendation[] @relation("OriginalProduct")
+  recommendationsAsAlternative Recommendation[] @relation("AlternativeProduct")
+
+  @@index([category])
+  @@index([name])
+}
+
+model Inventory {
+  id              String         @id @default(cuid())
+  storeId         String
+  productId       String
+  stockLevel      Int            @default(0)
+  safetyStock     Int            @default(5)
+  lastRestockedAt DateTime       @default(now())
+  lastAuditedAt   DateTime       @default(now())
+  status          String         @default("IN_STOCK") // IN_STOCK | LOW_STOCK | OUT_OF_STOCK | STALE
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  store           Store          @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  product         Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([storeId, productId])
+  @@index([storeId])
+  @@index([productId])
+  @@index([status])
+  @@index([lastAuditedAt])
+}
+
+model Order {
+  id                 String          @id @default(cuid())
+  orderNumber        String          @unique
+  customerId         String
+  storeId            String
+  status             String          @default("PENDING") // PENDING | ACCEPTED | PICKED | DISPATCHED | DELIVERED | CANCELLED
+  riskLevel          String          @default("LOW") // LOW | MEDIUM | HIGH
+  riskScore          Int             @default(15) // 0 - 100
+  riskFactors        String?         // JSON string array of reasons
+  totalAmount        Float
+  deliveryFee        Float           @default(30)
+  discountAmount     Float           @default(0)
+  cancellationReason String?
+  paymentStatus      String          @default("PAID") // PAID | REFUNDED | PENDING
+  resolutionAction   String?         // e.g. "OFFERED_ALTERNATIVE", "SUBSTITUTE_CONFIRMED", "RUNNER_EXPEDITED", "STORE_CALLED"
+  resolutionNotes    String?
+  resolvedAt         DateTime?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  customer           User            @relation(fields: [customerId], references: [id])
+  store              Store           @relation(fields: [storeId], references: [id])
+  items              OrderItem[]
+  delivery           Delivery?
+  supportTickets     SupportTicket[]
+  coupons            Coupon[]
+
+  @@index([customerId])
+  @@index([storeId])
+  @@index([status])
+  @@index([riskLevel])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id                  String   @id @default(cuid())
+  orderId             String
+  productId           String
+  quantity            Int      @default(1)
+  unitPrice           Float
+  isSubstituted       Boolean  @default(false)
+  originalProductId   String?
+  substitutedProductId String?
+  createdAt           DateTime @default(now())
+
+  order               Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product             Product  @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model Delivery {
+  id               String    @id @default(cuid())
+  orderId          String    @unique
+  runnerName       String
+  runnerPhone      String?
+  status           String    @default("ASSIGNED") // ASSIGNED | ARRIVED_STORE | EN_ROUTE | DELIVERED | FAILED
+  estimatedMinutes Int       @default(30)
+  actualMinutes    Int?
+  delayMinutes     Int       @default(0)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  order            Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model CustomerBehavior {
+  id                     String   @id @default(cuid())
+  customerId             String   @unique
+  segment                String   @default("NEW") // NEW | FIRST_ORDER | SECOND_ORDER_RISK | REPEAT | HIGH_VALUE | AT_RISK | DORMANT
+  totalOrders            Int      @default(0)
+  firstOrderAt           DateTime?
+  lastOrderAt            DateTime?
+  daysSinceLastOrder     Int      @default(0)
+  avgOrderValue          Float    @default(0)
+  categoryDiversityScore Float    @default(0.1) // 0.0 - 1.0 (multi-category customers repeat more)
+  churnRiskScore         Float    @default(0.2) // 0.0 - 1.0
+  repeatProbability      Float    @default(0.3) // 0.0 - 1.0
+  updatedAt              DateTime @updatedAt
+
+  customer               User     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([segment])
+  @@index([churnRiskScore])
+}
+
+model SupportTicket {
+  id           String    @id @default(cuid())
+  ticketNumber String    @unique
+  orderId      String?
+  customerId   String
+  issueType    String    // STALE_INVENTORY | CANCELLED_ORDER | DELIVERY_DELAY | REFUND_DISPUTE | SUBSTITUTION_QUALITY
+  status       String    @default("OPEN") // OPEN | IN_PROGRESS | RESOLVED
+  priority     String    @default("MEDIUM") // LOW | MEDIUM | HIGH | URGENT
+  refundAmount Float     @default(0)
+  notes        String?
+  createdAt    DateTime  @default(now())
+  resolvedAt   DateTime?
+
+  order        Order?    @relation(fields: [orderId], references: [id])
+  customer     User      @relation(fields: [customerId], references: [id])
+
+  @@index([customerId])
+  @@index([orderId])
+  @@index([status])
+  @@index([issueType])
+}
+
+model Promotion {
+  id            String    @id @default(cuid())
+  code          String    @unique
+  title         String
+  description   String
+  targetSegment String    // SECOND_ORDER_RISK | DORMANT | HIGH_VALUE | FIRST_ORDER | ALL
+  discountType  String    @default("FIXED") // FIXED | PERCENTAGE
+  discountValue Float     @default(40) // e.g. ₹40
+  minOrderValue Float     @default(299)
+  maxDiscount   Float?
+  totalBudget   Float     @default(100000)
+  spentBudget   Float     @default(0)
+  isActive      Boolean   @default(true)
+  isApproved    Boolean   @default(true)
+  validUntil    DateTime
+  createdAt     DateTime  @default(now())
+  coupons       Coupon[]
+
+  @@index([targetSegment])
+}
+
+model Coupon {
+  id          String     @id @default(cuid())
+  promotionId String
+  customerId  String
+  code        String
+  status      String     @default("AVAILABLE") // AVAILABLE | REDEEMED | EXPIRED
+  redeemedAt  DateTime?
+  orderId     String?
+  createdAt   DateTime   @default(now())
+
+  promotion   Promotion  @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  customer    User       @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  order       Order?     @relation(fields: [orderId], references: [id])
+
+  @@index([customerId])
+  @@index([promotionId])
+  @@index([status])
+}
+
+model Recommendation {
+  id                   String   @id @default(cuid())
+  originalProductId    String
+  alternativeProductId String
+  customerId           String?
+  confidenceScore      Int      // e.g. 94
+  reasons              String   // JSON string
+  status               String   @default("SUGGESTED") // SUGGESTED | ACCEPTED | REJECTED
+  createdAt            DateTime @default(now())
+
+  originalProduct      Product  @relation("OriginalProduct", fields: [originalProductId], references: [id])
+  alternativeProduct   Product  @relation("AlternativeProduct", fields: [alternativeProductId], references: [id])
+  customer             User?    @relation(fields: [customerId], references: [id])
+
+  @@index([originalProductId])
+  @@index([alternativeProductId])
+}
+
+model InventoryEvent {
+  id             String   @id @default(cuid())
+  storeId        String
+  productId      String
+  eventType      String   // AUDIT | RESTOCK | STOCKOUT | ADJUSTMENT | SALE
+  quantityChange Int
+  previousStock  Int
+  newStock       Int
+  note           String?
+  createdAt      DateTime @default(now())
+
+  store          Store    @relation(fields: [storeId], references: [id])
+  product        Product  @relation(fields: [productId], references: [id])
+
+  @@index([storeId])
+  @@index([productId])
+  @@index([createdAt])
+}
+
+model StoreMetric {
+  id                     String   @id @default(cuid())
+  storeId                String
+  date                   DateTime
+  fulfillmentRate        Float
+  rejectionRate          Float
+  averagePickTimeMinutes Int
+  staleInventoryCount    Int
+  totalOrders            Int
+  createdAt              DateTime @default(now())
+
+  store                  Store    @relation(fields: [storeId], references: [id])
+
+  @@index([storeId])
+  @@index([date])
+}
+
+model BusinessMetric {
+  id                     String   @id @default(cuid())
+  date                   DateTime
+  mau                    Int
+  monthlyOrders          Int
+  aov                    Float
+  repeatPurchaseRate     Float
+  averageDeliveryMinutes Int
+  cancellationRate       Float
+  supportTicketsCount    Int
+  promoSpend             Float
+  monthlyRevenue         Float
+  createdAt              DateTime @default(now())
+
+  @@index([date])
+}

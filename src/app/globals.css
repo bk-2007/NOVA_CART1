@@ -1,0 +1,101 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --paper: #EBEEE7;
+  --paper-deep: #E1E6DE;
+  --ink: #2B3A30;
+  --ink-soft: #3D4A41;
+  --muted: #6B746C;
+  --line: #C9D0C8;
+  --white: #F7F8F4;
+  --danger: #8B5148;
+  --warning: #8A7045;
+  --success: #4F6B56;
+
+  --font-fraunces: 'Fraunces', Georgia, serif;
+  --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+body {
+  background-color: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-inter);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Editorial Map & Grid Background */
+.bg-cartography {
+  background-color: var(--paper);
+  background-image: 
+    linear-gradient(to right, rgba(201, 208, 200, 0.45) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(201, 208, 200, 0.45) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.bg-cartography-dense {
+  background-image: 
+    linear-gradient(to right, rgba(201, 208, 200, 0.6) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(201, 208, 200, 0.6) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+/* Thin Editorial Borders */
+.border-editorial {
+  border: 1px solid var(--line);
+}
+
+.border-editorial-b {
+  border-bottom: 1px solid var(--line);
+}
+
+.border-editorial-t {
+  border-top: 1px solid var(--line);
+}
+
+.border-editorial-r {
+  border-right: 1px solid var(--line);
+}
+
+.border-editorial-l {
+  border-left: 1px solid var(--line);
+}
+
+/* Engraved Text Styles */
+.font-editorial-heading {
+  font-family: var(--font-fraunces);
+  font-feature-settings: "liga" 1, "dlig" 1;
+}
+
+.font-editorial-mono {
+  font-family: var(--font-mono);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--paper-deep);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--muted);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ink-soft);
+}
+
+/* Custom slider style */
+input[type=range] {
+  accent-color: var(--ink);
+}
