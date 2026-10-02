@@ -9,3 +9,7 @@ prisma/*.db
 prisma/*.db-journal
 *.log
 .DS_Store
+.vercel
+*.tsbuildinfo
+
+!.env.production

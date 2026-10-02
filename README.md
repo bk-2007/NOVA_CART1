@@ -2,6 +2,10 @@
 
 > **Business Rescue & Hyperlocal Operational Intelligence Platform**  
 > Diagnosing physical shelf stock degradation, fulfillment failure, and customer churn across 620 independent stores in Bengaluru.
+>
+> 🌐 **Live Production Deployment**: [https://nova-cart1.vercel.app](https://nova-cart1.vercel.app)  
+> 📦 **GitHub Repository**: [bk-2007/NOVA_CART1](https://github.com/bk-2007/NOVA_CART1)  
+> 🏆 **Engineered for Prompt Wars Business Rescue Challenge**
 
 ---
 
