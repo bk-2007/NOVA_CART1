@@ -1,4 +1,25 @@
 import { PrismaClient } from "@prisma/client";
+import fs from "fs";
+import path from "path";
+
+// Vercel Serverless Writable SQLite Bridge
+if (process.env.VERCEL) {
+  try {
+    const cwd = process.cwd();
+    const sourceDbPath = path.join(cwd, "dev.db");
+    const tmpDbPath = "/tmp/dev.db";
+
+    if (!fs.existsSync(tmpDbPath) && fs.existsSync(sourceDbPath)) {
+      fs.copyFileSync(sourceDbPath, tmpDbPath);
+    }
+
+    if (fs.existsSync(tmpDbPath)) {
+      process.env.DATABASE_URL = "file:/tmp/dev.db";
+    }
+  } catch (err) {
+    console.error("Vercel tmp db setup error:", err);
+  }
+}
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
