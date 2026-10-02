@@ -1,33 +1,25 @@
-"use client";
-
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ShieldAlert,
   ArrowRight,
   TrendingDown,
   TrendingUp,
   AlertTriangle,
-  Compass,
 } from "lucide-react";
 import { CausalSignalDiagram } from "@/components/CausalSignalDiagram";
+import { getOverviewData } from "@/lib/data/overview";
 
-export default function OverviewPage() {
-  const [data, setData] = useState<any | null>(null);
+export const revalidate = 60; // Cache and revalidate every 60s for high efficiency
 
-  useEffect(() => {
-    fetch("/api/overview")
-      .then((res) => res.json())
-      .then((json) => {
-        if (json.success) setData(json.data);
-      })
-      .catch((err) => console.error("Error loading overview", err));
-  }, []);
+export default async function OverviewPage() {
+  const data = await getOverviewData();
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* 01 / EXECUTIVE DIAGNOSIS - HERO BANNER WITH VINTAGE STOREFRONT ENGRAVING */}
-      <section className="border-editorial bg-editorial-white p-6 lg:p-7 shadow-sm">
+      <section aria-labelledby="executive-diagnosis-heading" className="border-editorial bg-editorial-white p-6 lg:p-7 shadow-sm">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
           {/* Left Text & CTA Column */}
           <div className="lg:col-span-7 space-y-4">
@@ -37,7 +29,7 @@ export default function OverviewPage() {
               <span>HYPERLOCAL COMMERCE INTELLIGENCE</span>
             </div>
 
-            <h1 className="font-editorial-heading text-4xl sm:text-5xl font-black text-ink tracking-tight leading-[1.08]">
+            <h1 id="executive-diagnosis-heading" className="font-editorial-heading text-4xl sm:text-5xl font-black text-ink tracking-tight leading-[1.08]">
               Growth is up.
               <br />
               <span className="text-editorial-danger italic font-normal">
@@ -51,40 +43,43 @@ export default function OverviewPage() {
               plunged from 41% to 27%, while promotional burn surged to ₹17L/month attempting to mask churn.
             </p>
 
-            <div className="pt-2 flex flex-wrap gap-2.5">
+            <nav aria-label="Quick Navigation" className="pt-2 flex flex-wrap gap-2.5">
               <Link
                 href="/shop"
-                className="inline-flex items-center space-x-2 px-4 py-2.5 bg-ink text-editorial-white text-xs font-medium hover:bg-ink-soft transition-colors"
+                className="inline-flex items-center space-x-2 px-4 py-2.5 bg-ink text-editorial-white text-xs font-medium hover:bg-ink-soft transition-colors focus-visible:outline-2 focus-visible:outline-ink"
               >
                 <span>Test Customer Shopping Loop</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
               <Link
                 href="/operations"
-                className="inline-flex items-center space-x-2 px-3.5 py-2.5 bg-paper border-editorial text-ink text-xs font-medium hover:bg-paper-deep transition-colors"
+                className="inline-flex items-center space-x-2 px-3.5 py-2.5 bg-paper border-editorial text-ink text-xs font-medium hover:bg-paper-deep transition-colors focus-visible:outline-2 focus-visible:outline-ink"
               >
                 <ShieldAlert className="w-3.5 h-3.5 text-editorial-danger" />
                 <span>Inspect High-Risk Queue (#NC1042)</span>
               </Link>
               <Link
                 href="/impact"
-                className="inline-flex items-center space-x-2 px-3.5 py-2.5 bg-paper border-editorial text-ink text-xs font-medium hover:bg-paper-deep transition-colors"
+                className="inline-flex items-center space-x-2 px-3.5 py-2.5 bg-paper border-editorial text-ink text-xs font-medium hover:bg-paper-deep transition-colors focus-visible:outline-2 focus-visible:outline-ink"
               >
                 <span>Run Impact Scenario Simulator</span>
               </Link>
-            </div>
+            </nav>
           </div>
 
-          {/* Right Column: Vintage Storefront Engraving ("Side Image") */}
+          {/* Right Column: Vintage Storefront Engraving */}
           <div className="lg:col-span-5 relative">
             <div className="relative border-editorial overflow-hidden bg-paper-deep shadow-xs">
-              <img
+              <Image
                 src="/images/hero_storefront.jpg"
                 alt="Vintage Neighborhood Store Engraving with Delivery Scooter"
+                width={600}
+                height={400}
+                priority
                 className="w-full h-auto object-cover grayscale contrast-110"
               />
               {/* Handwritten script overlay in sky */}
-              <div className="absolute top-3 right-4 text-right pointer-events-none">
+              <div className="absolute top-3 right-4 text-right pointer-events-none" aria-hidden="true">
                 <span className="font-serif italic text-xs md:text-sm text-ink font-semibold tracking-wide drop-shadow-xs block leading-tight">
                   More than orders.
                 </span>
@@ -98,10 +93,10 @@ export default function OverviewPage() {
       </section>
 
       {/* PLATFORM PULSE // SIX-MONTH BENCHMARK TRAJECTORY */}
-      <section className="space-y-2.5">
+      <section aria-labelledby="platform-pulse-heading" className="space-y-2.5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[10px] font-editorial-mono text-muted uppercase tracking-wider">
-          <span>PLATFORM PULSE // SIX-MONTH BENCHMARK TRAJECTORY</span>
-          <span>BASELINE: 38,500 MONTHLY ORDERS • ₹486 AOV</span>
+          <span id="platform-pulse-heading">PLATFORM PULSE // SIX-MONTH BENCHMARK TRAJECTORY</span>
+          <span>BASELINE: {data.monthlyOrders.toLocaleString()} MONTHLY ORDERS • ₹{data.aov} AOV</span>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
@@ -111,18 +106,18 @@ export default function OverviewPage() {
               <span className="text-[9.5px] uppercase font-editorial-mono tracking-widest text-muted">
                 MONTHLY ACTIVE USERS
               </span>
-              <span className="text-[9px] font-editorial-mono bg-paper px-1.5 py-0.2 border border-line text-muted">
+              <span className="text-[9px] font-editorial-mono bg-paper px-1.5 py-0.5 border border-line text-muted">
                 MAU
               </span>
             </div>
             <div className="my-2">
               <span className="font-editorial-heading text-2xl lg:text-3xl font-black text-ink">
-                46,000
+                {data.mau.toLocaleString()}
               </span>
             </div>
             <div className="pt-2 border-editorial-t flex items-center justify-between text-[10.5px]">
-              <span className="text-muted text-[10px]">from 39,000 (6m ago)</span>
-              <span className="font-editorial-mono text-editorial-success font-medium">↗ +17.9%</span>
+              <span className="text-muted text-[10px]">from {data.sixMonthTrajectory.mau.previous.toLocaleString()}</span>
+              <span className="font-editorial-mono text-editorial-success font-medium">↗ {data.sixMonthTrajectory.mau.change}</span>
             </div>
           </div>
 
@@ -132,18 +127,18 @@ export default function OverviewPage() {
               <span className="text-[9.5px] uppercase font-editorial-mono tracking-widest text-muted">
                 MONTHLY ORDERS
               </span>
-              <span className="text-[9px] font-editorial-mono bg-paper px-1.5 py-0.2 border border-line text-muted">
+              <span className="text-[9px] font-editorial-mono bg-paper px-1.5 py-0.5 border border-line text-muted">
                 VOL
               </span>
             </div>
             <div className="my-2">
               <span className="font-editorial-heading text-2xl lg:text-3xl font-black text-ink">
-                38,500
+                {data.monthlyOrders.toLocaleString()}
               </span>
             </div>
             <div className="pt-2 border-editorial-t flex items-center justify-between text-[10.5px]">
-              <span className="text-muted text-[10px]">from 31,200 (6m ago)</span>
-              <span className="font-editorial-mono text-editorial-success font-medium">↗ +23.4%</span>
+              <span className="text-muted text-[10px]">from {data.sixMonthTrajectory.monthlyOrders.previous.toLocaleString()}</span>
+              <span className="font-editorial-mono text-editorial-success font-medium">↗ {data.sixMonthTrajectory.monthlyOrders.change}</span>
             </div>
           </div>
 
@@ -153,18 +148,18 @@ export default function OverviewPage() {
               <span className="text-[9.5px] uppercase font-editorial-mono tracking-widest text-muted">
                 REPEAT PURCHASE RATE
               </span>
-              <span className="text-[9px] font-editorial-mono bg-paper px-1.5 py-0.2 border border-line text-muted">
+              <span className="text-[9px] font-editorial-mono bg-paper px-1.5 py-0.5 border border-line text-muted">
                 RET
               </span>
             </div>
             <div className="my-2">
               <span className="font-editorial-heading text-2xl lg:text-3xl font-black text-ink">
-                27%
+                {Math.round(data.repeatPurchaseRate * 100)}%
               </span>
             </div>
             <div className="pt-2 border-editorial-t flex items-center justify-between text-[10.5px]">
               <span className="text-muted text-[10px]">plummeted from 41%</span>
-              <span className="font-editorial-mono text-editorial-danger font-medium">↘ -34.1%</span>
+              <span className="font-editorial-mono text-editorial-danger font-medium">↘ {data.sixMonthTrajectory.repeatRate.change}</span>
             </div>
           </div>
 
@@ -174,18 +169,18 @@ export default function OverviewPage() {
               <span className="text-[9.5px] uppercase font-editorial-mono tracking-widest text-muted">
                 CANCELLATION RATE
               </span>
-              <span className="text-[9px] font-editorial-mono bg-paper px-1.5 py-0.2 border border-line text-muted">
+              <span className="text-[9px] font-editorial-mono bg-paper px-1.5 py-0.5 border border-line text-muted">
                 CANC
               </span>
             </div>
             <div className="my-2">
               <span className="font-editorial-heading text-2xl lg:text-3xl font-black text-ink">
-                11%
+                {Math.round(data.cancellationRate * 100)}%
               </span>
             </div>
             <div className="pt-2 border-editorial-t flex items-center justify-between text-[10.5px]">
               <span className="text-muted text-[10px]">doubled from 6%</span>
-              <span className="font-editorial-mono text-editorial-danger font-medium">↗ +83.3%</span>
+              <span className="font-editorial-mono text-editorial-danger font-medium">↗ {data.sixMonthTrajectory.cancellationRate.change}</span>
             </div>
           </div>
 
@@ -195,31 +190,31 @@ export default function OverviewPage() {
               <span className="text-[9.5px] uppercase font-editorial-mono tracking-widest text-muted">
                 AVERAGE DELIVERY TIME
               </span>
-              <span className="text-[9px] font-editorial-mono bg-paper px-1.5 py-0.2 border border-line text-muted">
+              <span className="text-[9px] font-editorial-mono bg-paper px-1.5 py-0.5 border border-line text-muted">
                 SLA
               </span>
             </div>
             <div className="my-2">
               <span className="font-editorial-heading text-2xl lg:text-3xl font-black text-ink">
-                37
+                {data.averageDeliveryMinutes}
                 <span className="text-sm font-normal text-muted ml-1">min</span>
               </span>
             </div>
             <div className="pt-2 border-editorial-t flex items-center justify-between text-[10.5px]">
               <span className="text-muted text-[10px]">stretched from 29 min</span>
-              <span className="font-editorial-mono text-editorial-danger font-medium">↗ +27.6%</span>
+              <span className="font-editorial-mono text-editorial-danger font-medium">↗ {data.sixMonthTrajectory.deliveryMinutes.change}</span>
             </div>
           </div>
         </div>
       </section>
 
       {/* 02 / DIAGNOSTIC ARCHITECTURE - THE SIGNAL */}
-      <section>
+      <section aria-label="Diagnostic Causal Signal Architecture">
         <CausalSignalDiagram />
       </section>
 
-      {/* 3-COLUMN BOTTOM SIGNALS (Exact matching reference image) */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      {/* 3-COLUMN BOTTOM SIGNALS */}
+      <section aria-label="Empirical Platform Signals" className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {/* Column 1: CUSTOMER SIGNALS */}
         <div className="bg-editorial-white border-editorial p-5 shadow-2xs flex flex-col justify-between">
           <div>
@@ -230,7 +225,7 @@ export default function OverviewPage() {
                 </h3>
                 <p className="text-[10px] text-muted">From a survey of 2,000 active and inactive customers</p>
               </div>
-              <Link href="/customers" className="text-[10.5px] text-muted hover:text-ink font-medium shrink-0">
+              <Link href="/customers" className="text-[10.5px] text-muted hover:text-ink font-medium shrink-0 focus-visible:outline-ink">
                 View all →
               </Link>
             </div>
@@ -245,7 +240,7 @@ export default function OverviewPage() {
               ].map((item, i) => (
                 <div key={i} className="flex items-center space-x-2 text-xs">
                   <span className="font-editorial-mono font-bold text-ink w-8 shrink-0">{item.pct}</span>
-                  <div className="w-14 bg-paper h-2 shrink-0 border border-line">
+                  <div className="w-14 bg-paper h-2 shrink-0 border border-line" aria-hidden="true">
                     <div className={`h-full ${item.barClass}`}></div>
                   </div>
                   <span className="text-[11px] text-ink-soft truncate">{item.label}</span>
@@ -265,7 +260,7 @@ export default function OverviewPage() {
                 </h3>
                 <p className="text-[10px] text-muted">Recent order data shows:</p>
               </div>
-              <Link href="/operations" className="text-[10.5px] text-muted hover:text-ink font-medium shrink-0">
+              <Link href="/operations" className="text-[10.5px] text-muted hover:text-ink font-medium shrink-0 focus-visible:outline-ink">
                 View details →
               </Link>
             </div>
@@ -279,7 +274,7 @@ export default function OverviewPage() {
               ].map((item, i) => (
                 <div key={i} className="flex items-center space-x-2 text-xs">
                   <span className="font-editorial-mono font-bold text-ink w-8 shrink-0">{item.pct}</span>
-                  <div className="w-14 bg-paper h-2 shrink-0 border border-line">
+                  <div className="w-14 bg-paper h-2 shrink-0 border border-line" aria-hidden="true">
                     <div className={`h-full ${item.barClass}`}></div>
                   </div>
                   <span className="text-[11px] text-ink-soft truncate">{item.label}</span>
@@ -299,7 +294,7 @@ export default function OverviewPage() {
                 </h3>
                 <p className="text-[10px] text-muted">From interviews with 100 partner stores</p>
               </div>
-              <Link href="/stores" className="text-[10.5px] text-muted hover:text-ink font-medium shrink-0">
+              <Link href="/stores" className="text-[10.5px] text-muted hover:text-ink font-medium shrink-0 focus-visible:outline-ink">
                 View all →
               </Link>
             </div>
@@ -314,7 +309,7 @@ export default function OverviewPage() {
               ].map((item, i) => (
                 <div key={i} className="flex items-center space-x-2 text-xs">
                   <span className="font-editorial-mono font-bold text-ink w-8 shrink-0">{item.pct}</span>
-                  <div className="w-14 bg-paper h-2 shrink-0 border border-line">
+                  <div className="w-14 bg-paper h-2 shrink-0 border border-line" aria-hidden="true">
                     <div className={`h-full ${item.barClass}`}></div>
                   </div>
                   <span className="text-[11px] text-ink-soft truncate">{item.label}</span>

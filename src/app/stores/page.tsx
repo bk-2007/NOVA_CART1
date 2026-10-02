@@ -18,15 +18,15 @@ export default function StoresPage() {
   const [loading, setLoading] = useState(true);
   const [selectedStore, setSelectedStore] = useState<any | null>(null);
 
-  const fetchStores = async () => {
+  const fetchStores = React.useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch("/api/stores");
       const json = await res.json();
       if (json.success) {
         setStores(json.data);
-        if (json.data.length > 0 && !selectedStore) {
-          setSelectedStore(json.data[0]);
+        if (json.data.length > 0) {
+          setSelectedStore((prev: any) => prev ?? json.data[0]);
         }
       }
     } catch (err) {
@@ -34,11 +34,11 @@ export default function StoresPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchStores();
-  }, []);
+  }, [fetchStores]);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">

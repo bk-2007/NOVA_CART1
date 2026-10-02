@@ -8,40 +8,42 @@ export async function GET(req: NextRequest) {
     const riskFilter = searchParams.get("risk");
 
     // Fetch orders with priority for HIGH risk
-    const orders = await prisma.order.findMany({
-      where: {
-        ...(riskFilter ? { riskLevel: riskFilter } : {}),
-      },
-      include: {
-        customer: {
-          include: {
-            behavior: true,
-          },
+    const [orders, refundDisputes] = await Promise.all([
+      prisma.order.findMany({
+        where: {
+          ...(riskFilter ? { riskLevel: riskFilter } : {}),
         },
-        store: true,
-        items: {
-          include: {
-            product: true,
+        include: {
+          customer: {
+            include: {
+              behavior: true,
+            },
           },
+          store: true,
+          items: {
+            include: {
+              product: true,
+            },
+          },
+          delivery: true,
+          supportTickets: true,
         },
-        delivery: true,
-        supportTickets: true,
-      },
-      orderBy: [
-        { riskLevel: "desc" }, // HIGH first
-        { createdAt: "desc" },
-      ],
-      take: 50,
-    });
+        orderBy: [
+          { riskLevel: "desc" },
+          { createdAt: "desc" },
+        ],
+        take: 50,
+      }),
+      prisma.supportTicket.findMany({
+        where: { issueType: { in: ["REFUND_DISPUTE", "CANCELLED_ORDER"] } },
+        include: { customer: true, order: true },
+        take: 10,
+      }),
+    ]);
 
-    // Counts
+    // Derived counts
     const highRiskOrders = orders.filter((o) => o.riskLevel === "HIGH" && o.status === "PENDING");
     const delayedOrders = orders.filter((o) => (o.delivery?.delayMinutes ?? 0) > 5);
-    const refundDisputes = await prisma.supportTicket.findMany({
-      where: { issueType: { in: ["REFUND_DISPUTE", "CANCELLED_ORDER"] } },
-      include: { customer: true, order: true },
-      take: 10,
-    });
 
     return apiSuccess({
       stats: {

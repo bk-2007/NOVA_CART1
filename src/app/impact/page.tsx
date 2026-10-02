@@ -2,39 +2,36 @@
 
 import React, { useState } from "react";
 import {
-  LineChart,
   Sliders,
-  TrendingUp,
-  DollarSign,
   AlertCircle,
   HelpCircle,
-  CheckCircle2,
-  Layers,
-  ArrowRight,
+  Database,
+  Calculator,
+  TrendingUp,
 } from "lucide-react";
 import { calculateBusinessImpact } from "@/lib/services/impactCalculator";
-import { MetricCard } from "@/components/MetricCard";
+import { PLATFORM_BENCHMARKS } from "@/lib/constants";
 
 export default function ImpactPage() {
-  // Slider states with defaults from prompt
+  // Slider states with defaults from prompt benchmarks
   const [targetCancellationPct, setTargetCancellationPct] = useState<number>(8); // 11% -> 8%
   const [targetRepeatPct, setTargetRepeatPct] = useState<number>(32); // 27% -> 32%
   const [targetSupportTickets, setTargetSupportTickets] = useState<number>(4800); // 5900 -> 4800
   const [targetPromoSpendLakhs, setTargetPromoSpendLakhs] = useState<number>(12.5); // 17L -> 12.5L
 
-  // Real-time calculation
+  // Real-time calculation using deterministic business engine
   const impact = calculateBusinessImpact({
-    monthlyOrders: 38500,
-    aov: 486,
-    currentCancellationRate: 0.11,
+    monthlyOrders: PLATFORM_BENCHMARKS.MONTHLY_ORDERS,
+    aov: PLATFORM_BENCHMARKS.AVERAGE_ORDER_VALUE_INR,
+    currentCancellationRate: PLATFORM_BENCHMARKS.ORDER_CANCELLATION_RATE_CURRENT,
     targetCancellationRate: targetCancellationPct / 100,
-    currentRepeatRate: 0.27,
+    currentRepeatRate: PLATFORM_BENCHMARKS.REPEAT_PURCHASE_RATE_CURRENT,
     targetRepeatRate: targetRepeatPct / 100,
-    currentSupportTickets: 5900,
+    currentSupportTickets: PLATFORM_BENCHMARKS.MONTHLY_SUPPORT_TICKETS_CURRENT,
     targetSupportTickets,
-    monthlyPromoSpend: 1700000,
+    monthlyPromoSpend: PLATFORM_BENCHMARKS.MONTHLY_PROMO_SPEND_INR,
     targetPromoSpend: targetPromoSpendLakhs * 100000,
-    sixMonthBudget: 2500000,
+    sixMonthBudget: PLATFORM_BENCHMARKS.SIX_MONTH_IMPLEMENTATION_BUDGET_INR,
   });
 
   const formatINR = (val: number) => {
@@ -46,7 +43,7 @@ export default function ImpactPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Editorial Header */}
-      <div className="border-editorial-b pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <header className="border-editorial-b pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="text-[10px] font-editorial-mono uppercase tracking-widest text-muted">
             09 / ECONOMIC IMPACT & SCENARIO SIMULATOR
@@ -59,48 +56,140 @@ export default function ImpactPage() {
           </p>
         </div>
 
-        {/* SCENARIO ESTIMATE BADGE (Section 13 & 22 Requirement) */}
+        {/* SCENARIO ESTIMATE BADGE */}
         <div className="flex items-center space-x-2 px-3 py-1.5 bg-paper-deep border-editorial text-xs font-editorial-mono text-ink self-start md:self-auto">
           <AlertCircle className="w-3.5 h-3.5 text-editorial-warning" />
           <span className="font-bold">SCENARIO ESTIMATE</span>
         </div>
-      </div>
+      </header>
 
-      {/* Mandatory Disclaimer (Section 13 requirement) */}
-      <div className="p-3 bg-paper border-editorial text-[11px] text-muted leading-relaxed">
+      {/* Mandatory Governance Notice */}
+      <div className="p-3 bg-paper border-editorial text-[11px] text-muted leading-relaxed" role="note">
         <strong>Mandatory Governance Notice:</strong> All figures presented below are modeled projections labeled strictly as{" "}
         <span className="font-semibold text-ink">SCENARIO ESTIMATES</span>. NOVA CART Local Commerce Intelligence does not claim guaranteed revenue; figures illustrate mathematical sensitivity against platform operational baselines (38,500 orders/mo, ₹486 AOV).
       </div>
 
-      {/* Interactive Sliders Section (Section 22 Requirement) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* 3-PILLAR TRANSPARENCY: CASE DATA | MODEL ASSUMPTIONS | PROJECTED RESULTS */}
+      <section aria-label="Methodology Structure" className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Pillar 1: Case Data */}
+        <div className="bg-editorial-white border-editorial p-4 space-y-2">
+          <div className="flex items-center gap-1.5 text-ink font-bold text-xs uppercase font-editorial-mono">
+            <Database className="w-3.5 h-3.5 text-muted" />
+            <span>1. Case Data (Bengaluru Baseline)</span>
+          </div>
+          <ul className="text-[11px] space-y-1 text-ink-soft">
+            <li className="flex justify-between">
+              <span className="text-muted">Monthly Orders:</span>
+              <span className="font-editorial-mono font-medium">38,500</span>
+            </li>
+            <li className="flex justify-between">
+              <span className="text-muted">Average Order Value:</span>
+              <span className="font-editorial-mono font-medium">₹486</span>
+            </li>
+            <li className="flex justify-between">
+              <span className="text-muted">Cancellation Rate:</span>
+              <span className="font-editorial-mono font-medium text-editorial-danger">11%</span>
+            </li>
+            <li className="flex justify-between">
+              <span className="text-muted">Repeat Purchase Rate:</span>
+              <span className="font-editorial-mono font-medium text-editorial-danger">27%</span>
+            </li>
+            <li className="flex justify-between">
+              <span className="text-muted">Monthly Promo Burn:</span>
+              <span className="font-editorial-mono font-medium">₹17.0L</span>
+            </li>
+          </ul>
+        </div>
+
+        {/* Pillar 2: Model Assumptions */}
+        <div className="bg-editorial-white border-editorial p-4 space-y-2">
+          <div className="flex items-center gap-1.5 text-ink font-bold text-xs uppercase font-editorial-mono">
+            <HelpCircle className="w-3.5 h-3.5 text-muted" />
+            <span>2. Model Assumptions</span>
+          </div>
+          <ul className="text-[11px] space-y-1 text-ink-soft">
+            <li className="flex justify-between">
+              <span className="text-muted">Cost per Support Dispute:</span>
+              <span className="font-editorial-mono font-medium">₹180 / ticket</span>
+            </li>
+            <li className="flex justify-between">
+              <span className="text-muted">Repeat Volume Absorption:</span>
+              <span className="font-editorial-mono font-medium">0.75 conservative</span>
+            </li>
+            <li className="flex justify-between">
+              <span className="text-muted">6-Month Implementation Budget:</span>
+              <span className="font-editorial-mono font-medium">₹25.0 Lakhs</span>
+            </li>
+            <li className="flex justify-between">
+              <span className="text-muted">AOV Elasticity:</span>
+              <span className="font-editorial-mono font-medium">Fixed baseline</span>
+            </li>
+          </ul>
+        </div>
+
+        {/* Pillar 3: Projected Results */}
+        <div className="bg-editorial-white border-editorial p-4 space-y-2">
+          <div className="flex items-center gap-1.5 text-ink font-bold text-xs uppercase font-editorial-mono">
+            <Calculator className="w-3.5 h-3.5 text-editorial-success" />
+            <span>3. Projected Results</span>
+          </div>
+          <ul className="text-[11px] space-y-1 text-ink-soft">
+            <li className="flex justify-between">
+              <span className="text-muted">Recovered Monthly GMV:</span>
+              <span className="font-editorial-mono font-bold text-editorial-success">₹{formatINR(impact.recoveredMonthlyGMV)}</span>
+            </li>
+            <li className="flex justify-between">
+              <span className="text-muted">Monthly Value Delivered:</span>
+              <span className="font-editorial-mono font-bold text-editorial-success">₹{formatINR(impact.totalMonthlyValueDelivered)}</span>
+            </li>
+            <li className="flex justify-between">
+              <span className="text-muted">6-Month Cumulative Benefit:</span>
+              <span className="font-editorial-mono font-bold text-ink">₹{formatINR(impact.sixMonthCumulativeBenefit)}</span>
+            </li>
+            <li className="flex justify-between">
+              <span className="text-muted">Net Economic ROI:</span>
+              <span className="font-editorial-mono font-bold text-editorial-success">{impact.roiMultiple}x</span>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      {/* Interactive Sliders Section */}
+      <section aria-labelledby="sliders-heading" className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-editorial-white border-editorial p-6 shadow-sm space-y-5">
           <div className="flex items-center justify-between border-editorial-b pb-3">
-            <h3 className="font-editorial-heading text-base font-bold text-ink flex items-center gap-2">
+            <h2 id="sliders-heading" className="font-editorial-heading text-base font-bold text-ink flex items-center gap-2">
               <Sliders className="w-4 h-4 text-ink" />
               <span>Operational Recovery Lever Sliders</span>
-            </h3>
+            </h2>
             <span className="text-[10px] font-editorial-mono text-muted uppercase">
               Move to recalculate live
             </span>
           </div>
 
-          {/* Slider 1: Cancellation Rate (11% -> 8%) */}
+          {/* Slider 1: Cancellation Rate */}
           <div className="space-y-2">
             <div className="flex justify-between items-baseline text-xs">
-              <span className="font-semibold text-ink">Order Cancellation Rate</span>
+              <label htmlFor="slider-cancellation" className="font-semibold text-ink">
+                Order Cancellation Rate
+              </label>
               <span className="font-editorial-mono text-ink">
                 11% → <strong className="text-editorial-success text-sm">{targetCancellationPct}%</strong>
               </span>
             </div>
             <input
+              id="slider-cancellation"
               type="range"
               min={3}
               max={11}
               step={0.5}
               value={targetCancellationPct}
               onChange={(e) => setTargetCancellationPct(parseFloat(e.target.value))}
-              className="w-full cursor-pointer h-1.5 bg-paper-deep"
+              aria-valuemin={3}
+              aria-valuemax={11}
+              aria-valuenow={targetCancellationPct}
+              aria-valuetext={`${targetCancellationPct} percent cancellation rate`}
+              className="w-full cursor-pointer h-1.5 bg-paper-deep focus-visible:outline-2 focus-visible:outline-ink"
             />
             <div className="flex justify-between text-[10px] text-muted font-editorial-mono">
               <span>Optimistic: 3%</span>
@@ -108,22 +197,29 @@ export default function ImpactPage() {
             </div>
           </div>
 
-          {/* Slider 2: Repeat Purchase Rate (27% -> 32%) */}
+          {/* Slider 2: Repeat Purchase Rate */}
           <div className="space-y-2">
             <div className="flex justify-between items-baseline text-xs">
-              <span className="font-semibold text-ink">Repeat Purchase Rate</span>
+              <label htmlFor="slider-repeat" className="font-semibold text-ink">
+                Repeat Purchase Rate
+              </label>
               <span className="font-editorial-mono text-ink">
                 27% → <strong className="text-editorial-success text-sm">{targetRepeatPct}%</strong>
               </span>
             </div>
             <input
+              id="slider-repeat"
               type="range"
               min={27}
               max={45}
               step={1}
               value={targetRepeatPct}
               onChange={(e) => setTargetRepeatPct(parseInt(e.target.value, 10))}
-              className="w-full cursor-pointer h-1.5 bg-paper-deep"
+              aria-valuemin={27}
+              aria-valuemax={45}
+              aria-valuenow={targetRepeatPct}
+              aria-valuetext={`${targetRepeatPct} percent repeat rate`}
+              className="w-full cursor-pointer h-1.5 bg-paper-deep focus-visible:outline-2 focus-visible:outline-ink"
             />
             <div className="flex justify-between text-[10px] text-muted font-editorial-mono">
               <span>Current Nova Cart: 27%</span>
@@ -131,22 +227,29 @@ export default function ImpactPage() {
             </div>
           </div>
 
-          {/* Slider 3: Monthly Support Tickets (5900 -> 4800) */}
+          {/* Slider 3: Monthly Support Tickets */}
           <div className="space-y-2">
             <div className="flex justify-between items-baseline text-xs">
-              <span className="font-semibold text-ink">Monthly Support Inquiries</span>
+              <label htmlFor="slider-support" className="font-semibold text-ink">
+                Monthly Support Inquiries
+              </label>
               <span className="font-editorial-mono text-ink">
                 5,900 → <strong className="text-editorial-success text-sm">{targetSupportTickets.toLocaleString()}</strong>
               </span>
             </div>
             <input
+              id="slider-support"
               type="range"
               min={2000}
               max={5900}
               step={100}
               value={targetSupportTickets}
               onChange={(e) => setTargetSupportTickets(parseInt(e.target.value, 10))}
-              className="w-full cursor-pointer h-1.5 bg-paper-deep"
+              aria-valuemin={2000}
+              aria-valuemax={5900}
+              aria-valuenow={targetSupportTickets}
+              aria-valuetext={`${targetSupportTickets} monthly support tickets`}
+              className="w-full cursor-pointer h-1.5 bg-paper-deep focus-visible:outline-2 focus-visible:outline-ink"
             />
             <div className="flex justify-between text-[10px] text-muted font-editorial-mono">
               <span>Target: 2,000</span>
@@ -154,22 +257,29 @@ export default function ImpactPage() {
             </div>
           </div>
 
-          {/* Slider 4: Monthly Promotional Burn (₹17L -> ₹12.5L) */}
+          {/* Slider 4: Monthly Promotional Burn */}
           <div className="space-y-2">
             <div className="flex justify-between items-baseline text-xs">
-              <span className="font-semibold text-ink">Monthly Promotional Budget</span>
+              <label htmlFor="slider-promo" className="font-semibold text-ink">
+                Monthly Promotional Budget
+              </label>
               <span className="font-editorial-mono text-ink">
                 ₹17.0L → <strong className="text-editorial-success text-sm">₹{targetPromoSpendLakhs.toFixed(1)}L</strong>
               </span>
             </div>
             <input
+              id="slider-promo"
               type="range"
               min={8}
               max={17}
               step={0.5}
               value={targetPromoSpendLakhs}
               onChange={(e) => setTargetPromoSpendLakhs(parseFloat(e.target.value))}
-              className="w-full cursor-pointer h-1.5 bg-paper-deep"
+              aria-valuemin={8}
+              aria-valuemax={17}
+              aria-valuenow={targetPromoSpendLakhs}
+              aria-valuetext={`₹${targetPromoSpendLakhs} Lakhs monthly promo spend`}
+              className="w-full cursor-pointer h-1.5 bg-paper-deep focus-visible:outline-2 focus-visible:outline-ink"
             />
             <div className="flex justify-between text-[10px] text-muted font-editorial-mono">
               <span>Efficient: ₹8.0L</span>
@@ -179,7 +289,7 @@ export default function ImpactPage() {
         </div>
 
         {/* Financial ROI Summary Card */}
-        <div className="bg-editorial-white border-editorial p-6 shadow-sm flex flex-col justify-between">
+        <div className="bg-editorial-white border-editorial p-6 shadow-sm flex flex-col justify-between" aria-label="Financial Feasibility Summary">
           <div>
             <div className="flex justify-between items-center border-editorial-b pb-3 mb-4">
               <div>
@@ -229,25 +339,25 @@ export default function ImpactPage() {
             </span>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* DETAILED PROJECTED VALUE BREAKDOWN (Section 22 Requirement) */}
-      <div className="bg-editorial-white border-editorial p-6 shadow-sm space-y-4">
+      {/* DETAILED PROJECTED VALUE BREAKDOWN */}
+      <section aria-labelledby="value-breakdown-heading" className="bg-editorial-white border-editorial p-6 shadow-sm space-y-4">
         <div className="flex justify-between items-center border-editorial-b pb-3">
           <div>
             <span className="text-[10px] font-editorial-mono uppercase tracking-widest text-muted">
               VALUE ATTRIBUTION BREAKDOWN
             </span>
-            <h3 className="font-editorial-heading text-lg font-bold text-ink">
+            <h2 id="value-breakdown-heading" className="font-editorial-heading text-lg font-bold text-ink">
               Monthly Operational Value Generated
-            </h3>
+            </h2>
           </div>
           <span className="text-xs font-editorial-mono text-muted">
             Total Monthly Value: <strong>₹{formatINR(impact.totalMonthlyValueDelivered)}</strong>
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <div className="p-4 bg-paper border-editorial">
             <span className="text-[10px] uppercase font-editorial-mono text-muted block mb-1">
               1. Recovered Orders
@@ -308,23 +418,23 @@ export default function ImpactPage() {
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Visible Model Assumptions (Section 13 & 22 Requirement) */}
-      <div className="bg-paper-deep border-editorial p-6 space-y-3">
-        <h4 className="text-xs font-bold uppercase tracking-wider text-ink flex items-center gap-1.5">
+      {/* Visible Model Assumptions */}
+      <section aria-labelledby="assumptions-heading" className="bg-paper-deep border-editorial p-6 space-y-3">
+        <h3 id="assumptions-heading" className="text-xs font-bold uppercase tracking-wider text-ink flex items-center gap-1.5">
           <HelpCircle className="w-3.5 h-3.5 text-muted" />
-          <span>Explicit Simulation Model Assumptions & Benchmarks:</span>
-        </h4>
+          <span>Explicit Simulation Model Assumptions & Mathematical Benchmarks:</span>
+        </h3>
         <ul className="space-y-1.5">
           {impact.assumptions.map((assump, idx) => (
             <li key={idx} className="text-xs text-ink-soft flex items-start space-x-2">
-              <span className="font-editorial-mono text-[10px] text-muted mt-0.5">{idx + 1}.</span>
+              <span className="font-editorial-mono text-[10px] text-muted mt-0.5" aria-hidden="true">{idx + 1}.</span>
               <span>{assump}</span>
             </li>
           ))}
         </ul>
-      </div>
+      </section>
     </div>
   );
 }

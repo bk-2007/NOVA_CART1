@@ -304,3 +304,145 @@ describe("6. Business Impact & Scenario Calculator", () => {
     expect(impact.assumptions.length).toBeGreaterThan(0);
   });
 });
+
+describe("7. Engine Edge Cases & Boundary Conditions", () => {
+  it("handles critically stale inventory (>48h) with high demand and low stock", () => {
+    const res = calculateInventoryConfidence({
+      productId: "prod_crit_stale",
+      productName: "Critical Stale Dairy",
+      category: "Dairy",
+      storeId: "store_unreliable",
+      storeName: "Neglected Kirana",
+      storeFulfillmentRate: 0.72,
+      storeRejectionRate: 0.22,
+      avgDeliveryMinutes: 45,
+      stockLevel: 1,
+      safetyStock: 5,
+      lastAuditedAt: new Date(Date.now() - 52 * 3600 * 1000), // 52 hours ago
+      status: "LOW_STOCK",
+      recentDemandLastHour: 10,
+      recentCancellations24h: 3,
+    });
+
+    expect(res.confidence).toBe(5); // Minimum clamp
+    expect(res.riskLevel).toBe("HIGH");
+    expect(res.isStale).toBe(true);
+    expect(res.reasons.some((r) => r.includes("Critically stale"))).toBe(true);
+  });
+
+  it("handles missing/no candidates gracefully in alternative recommendation engine", () => {
+    const rec = rankProductAlternatives(
+      {
+        id: "prod_unique",
+        name: "Rare Specialty Spices",
+        category: "Spices",
+        price: 250,
+        confidence: 30,
+      },
+      [], // No candidates
+      70
+    );
+
+    expect(rec).toBeNull();
+  });
+
+  it("handles candidates with identical or lower confidence by filtering them out", () => {
+    const rec = rankProductAlternatives(
+      {
+        id: "prod_bad_01",
+        name: "Stale Milk",
+        category: "Dairy",
+        price: 60,
+        confidence: 45,
+      },
+      [
+        {
+          id: "prod_bad_02",
+          sku: "SKU-BAD-02",
+          name: "Equally Stale Milk",
+          brand: "BrandX",
+          category: "Dairy",
+          unit: "1L",
+          mrp: 60,
+          price: 60,
+          storeId: "store_03",
+          storeName: "Store 3",
+          storeLocality: "Indiranagar",
+          stockLevel: 10,
+          confidence: 40, // Lower confidence!
+          storeFulfillmentRate: 0.80,
+          avgDeliveryMinutes: 30,
+        },
+      ],
+      70
+    );
+
+    expect(rec).toBeNull();
+  });
+
+  it("handles zero delta in impact simulator without throwing or dividing by zero", () => {
+    const impact = calculateBusinessImpact({
+      monthlyOrders: 38500,
+      aov: 486,
+      currentCancellationRate: 0.11,
+      targetCancellationRate: 0.11, // Zero reduction
+      currentRepeatRate: 0.27,
+      targetRepeatRate: 0.27,       // Zero lift
+      currentSupportTickets: 5900,
+      targetSupportTickets: 5900,   // Zero ticket reduction
+      monthlyPromoSpend: 1700000,
+      targetPromoSpend: 1700000,    // Zero promo savings
+      sixMonthBudget: 2500000,
+    });
+
+    expect(impact.recoveredMonthlyOrders).toBe(0);
+    expect(impact.recoveredMonthlyGMV).toBe(0);
+    expect(impact.supportSavingsMonthly).toBe(0);
+    expect(impact.promotionalEfficiencyMonthlySavings).toBe(0);
+    expect(impact.totalMonthlyValueDelivered).toBe(0);
+    expect(impact.netBenefitAfterBudget).toBe(-2500000);
+    expect(impact.roiMultiple).toBe(0);
+  });
+
+  it("recalculates order risk from HIGH to LOW when alternative substitute is accepted", () => {
+    // Before substitution: High risk item (confidence: 42%)
+    const highRiskAssessment = calculateOrderRisk({
+      orderId: "ord_flow_test",
+      orderNumber: "NC_TEST_01",
+      customerId: "cust_rahul",
+      customerSegment: "SECOND_ORDER_RISK",
+      customerPriorCancellations: 0,
+      storeId: "store_01",
+      storeName: "Sri Krishna Kirana",
+      storeRejectionRate: 0.14,
+      storeFulfillmentRate: 0.84,
+      minItemConfidence: 42,
+      avgItemConfidence: 42,
+      estimatedDeliveryMinutes: 38,
+      containsSubstitutedItems: false,
+    });
+
+    expect(highRiskAssessment.riskLevel).toBe("HIGH");
+
+    // After substitution: High-confidence substitute from reliable store (confidence: 99%)
+    const mitigatedAssessment = calculateOrderRisk({
+      orderId: "ord_flow_test",
+      orderNumber: "NC_TEST_01",
+      customerId: "cust_rahul",
+      customerSegment: "SECOND_ORDER_RISK",
+      customerPriorCancellations: 0,
+      storeId: "store_02",
+      storeName: "Anand Supermart & Fresh Dairy",
+      storeRejectionRate: 0.03,
+      storeFulfillmentRate: 0.97,
+      minItemConfidence: 99,
+      avgItemConfidence: 99,
+      estimatedDeliveryMinutes: 22,
+      containsSubstitutedItems: true,
+    });
+
+    expect(mitigatedAssessment.riskLevel).toBe("LOW");
+    expect(mitigatedAssessment.riskScore).toBeLessThan(highRiskAssessment.riskScore);
+    expect(mitigatedAssessment.requiresImmediateOpsIntervention).toBe(false);
+  });
+});

@@ -118,7 +118,7 @@ export function Navigation() {
           </div>
 
           {/* Navigation Section */}
-          <nav className="py-4 px-3 space-y-0.5">
+          <nav aria-label="Main Navigation" className="py-4 px-3 space-y-0.5">
             <div className="px-3 pb-2 text-[9.5px] uppercase tracking-[0.2em] text-muted font-editorial-mono">
               NAVIGATION INDEX
             </div>
@@ -163,15 +163,17 @@ export function Navigation() {
           </nav>
         </div>
 
-        {/* SIDE IMAGE & STATUS FOOTER (As shown in reference image) */}
+        {/* SIDE IMAGE & STATUS FOOTER */}
         <div className="border-editorial-t bg-paper flex flex-col">
           {/* Vintage Bridge Engraving Illustration */}
           <div className="p-3 pb-2">
             <div className="relative w-full h-[145px] border-editorial overflow-hidden bg-paper-deep shadow-2xs">
-              <img
+              <Image
                 src="/images/sidebar_bridge.jpg"
                 alt="Vintage Stone Arch Bridge Landscape Engraving"
-                className="w-full h-full object-cover object-center grayscale contrast-125 opacity-90 hover:opacity-100 transition-opacity"
+                fill
+                sizes="240px"
+                className="object-cover object-center grayscale contrast-125 opacity-90 hover:opacity-100 transition-opacity"
               />
             </div>
             <div className="text-[8.5px] uppercase font-editorial-mono tracking-[0.16em] text-muted mt-2 text-center leading-tight">

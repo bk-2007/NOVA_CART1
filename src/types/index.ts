@@ -116,3 +116,103 @@ export interface ImpactScenarioOutput {
   roiMultiple: number;
   assumptions: string[];
 }
+
+export interface ProductWithConfidence {
+  id: string;
+  sku: string;
+  name: string;
+  brand: string;
+  category: string;
+  unit: string;
+  mrp: number;
+  price: number;
+  description?: string | null;
+  storeId: string;
+  storeName: string;
+  storeLocality?: string;
+  stockLevel: number;
+  confidence: number;
+  confidenceDetails?: InventoryConfidenceResult;
+}
+
+export interface PlatformOverviewMetrics {
+  registeredUsers: number;
+  mau: number;
+  monthlyOrders: number;
+  aov: number;
+  monthlyRevenueINR: number;
+  repeatPurchaseRate: number;
+  averageDeliveryMinutes: number;
+  cancellationRate: number;
+  supportTicketsCount: number;
+  promoSpendINR: number;
+  sixMonthTrajectory: {
+    mau: { previous: number; current: number; change: string };
+    monthlyOrders: { previous: number; current: number; change: string };
+    aov: { previous: number; current: number; change: string };
+    repeatRate: { previous: number; current: number; change: string; isNegative?: boolean };
+    deliveryMinutes: { previous: number; current: number; change: string; isNegative?: boolean };
+    cancellationRate: { previous: number; current: number; change: string; isNegative?: boolean };
+    supportTickets: { previous: number; current: number; change: string; isNegative?: boolean };
+    promoSpend: { previous: number; current: number; change: string; isNegative?: boolean };
+    monthlyRevenue: { previous: number; current: number; change: string };
+  };
+  operationalFriction: {
+    ordersCancelledPercent: number;
+    lateDeliveriesPercent: number;
+    substitutionsPercent: number;
+    refundSupportPercent: number;
+  };
+  cancellationCauses: Array<{ cause: string; sharePercent: number }>;
+  partnerStoreSignals: Array<{ signal: string; percentage: number }>;
+  customerSignals: Array<{ signal: string; percentage: number }>;
+  counts: {
+    totalStores: number;
+    totalProducts: number;
+    totalOrders: number;
+    highRiskOrdersCount: number;
+    pendingOrdersCount: number;
+    openTicketsCount: number;
+  };
+  historicalTrend: any[];
+}
+
+export interface OperationsQueueOrder {
+  id: string;
+  orderNumber: string;
+  customerId: string;
+  customerName: string;
+  customerSegment: CustomerSegment;
+  storeId: string;
+  storeName: string;
+  totalAmount: number;
+  status: OrderStatus;
+  riskLevel: OrderRiskLevel;
+  riskScore: number;
+  riskFactors: string[];
+  recommendedAction: string;
+  requiresImmediateOpsIntervention: boolean;
+  minItemConfidence: number;
+  runnerName: string;
+  runnerStatus: string;
+  delayMinutes: number;
+  estimatedDeliveryMinutes: number;
+  containsSubstitutedItems: boolean;
+  createdAt: string;
+}
+
+export interface CustomerWithMetrics {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  segment: CustomerSegment;
+  totalOrders: number;
+  avgOrderValue: number;
+  daysSinceLastOrder: number;
+  churnRiskScore: number;
+  repeatProbability: number;
+  categoryDiversityScore: number;
+  lastOrderAt: string | null;
+  createdAt: string;
+}

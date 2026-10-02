@@ -188,13 +188,17 @@ export default function InventoryPage() {
       <div className="bg-editorial-white border-editorial p-4 shadow-sm space-y-3">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="relative flex-1 max-w-md">
-            <Search className="w-4 h-4 text-muted absolute left-3 top-1/2 -translate-y-1/2" />
+            <label htmlFor="inventory-search-input" className="sr-only">
+              Filter by product name, brand, store, or category
+            </label>
+            <Search className="w-4 h-4 text-muted absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
+              id="inventory-search-input"
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Filter by product name, brand, store, or category..."
-              className="w-full pl-9 pr-3 py-1.5 bg-paper text-xs text-ink placeholder:text-muted border-editorial focus:outline-none focus:border-ink"
+              className="w-full pl-9 pr-3 py-1.5 bg-paper text-xs text-ink placeholder:text-muted border-editorial focus:outline-none focus:border-ink focus-visible:ring-1 focus-visible:ring-ink"
             />
           </div>
 

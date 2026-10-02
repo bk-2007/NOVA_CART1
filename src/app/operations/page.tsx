@@ -16,8 +16,21 @@ import {
 } from "lucide-react";
 import { MetricCard } from "@/components/MetricCard";
 
+interface OperationsStats {
+  totalActiveOrders?: number;
+  highRiskPendingCount?: number;
+  delayedOrdersCount?: number;
+  openRefundDisputesCount?: number;
+}
+
+interface OperationsData {
+  stats: OperationsStats;
+  priorityQueue: any[];
+  refundDisputes: any[];
+}
+
 export default function OperationsPage() {
-  const [data, setData] = useState<any | null>(null);
+  const [data, setData] = useState<OperationsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [resolvingId, setResolvingId] = useState<string | null>(null);
   const [resolutionNotice, setResolutionNotice] = useState<string | null>(null);
@@ -60,7 +73,7 @@ export default function OperationsPage() {
       if (!res.ok) throw new Error(json.error || "Resolution failed");
 
       // Update state locally immediately
-      setData((prev: any) => {
+      setData((prev) => {
         if (!prev) return prev;
         const updatedQueue = prev.priorityQueue.map((ord: any) =>
           ord.id === orderId
@@ -80,7 +93,7 @@ export default function OperationsPage() {
           priorityQueue: updatedQueue,
           stats: {
             ...prev.stats,
-            highRiskPendingCount: Math.max(0, prev.stats.highRiskPendingCount - 1),
+            highRiskPendingCount: Math.max(0, (prev.stats.highRiskPendingCount ?? 1) - 1),
           },
         };
       });

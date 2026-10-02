@@ -4,27 +4,25 @@ import { apiSuccess, apiError } from "@/lib/security";
 
 export async function GET(req: NextRequest) {
   try {
-    const latestMetrics = await prisma.businessMetric.findFirst({
-      orderBy: { date: "desc" },
-    });
-
-    const historicalMetrics = await prisma.businessMetric.findMany({
-      orderBy: { date: "asc" },
-    });
-
-    // Counts
-    const totalStores = await prisma.store.count();
-    const totalProducts = await prisma.product.count();
-    const totalOrders = await prisma.order.count();
-    const highRiskOrdersCount = await prisma.order.count({
-      where: { riskLevel: "HIGH" },
-    });
-    const pendingOrdersCount = await prisma.order.count({
-      where: { status: "PENDING" },
-    });
-    const openTicketsCount = await prisma.supportTicket.count({
-      where: { status: "OPEN" },
-    });
+    const [
+      latestMetrics,
+      historicalMetrics,
+      totalStores,
+      totalProducts,
+      totalOrders,
+      highRiskOrdersCount,
+      pendingOrdersCount,
+      openTicketsCount,
+    ] = await Promise.all([
+      prisma.businessMetric.findFirst({ orderBy: { date: "desc" } }),
+      prisma.businessMetric.findMany({ orderBy: { date: "asc" } }),
+      prisma.store.count(),
+      prisma.product.count(),
+      prisma.order.count(),
+      prisma.order.count({ where: { riskLevel: "HIGH" } }),
+      prisma.order.count({ where: { status: "PENDING" } }),
+      prisma.supportTicket.count({ where: { status: "OPEN" } }),
+    ]);
 
     // Operational benchmark summary
     const platformSummary = {

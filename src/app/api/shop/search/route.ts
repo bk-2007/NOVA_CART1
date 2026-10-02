@@ -98,13 +98,26 @@ export async function GET(req: NextRequest) {
     let recommendation = null;
 
     if (topItem && topItem.confidence < 70) {
-      // Gather all potential substitute candidates across partner stores
+      // Gather all potential substitute candidates across partner stores in this category
       const candidateList: ProductAlternativeCandidate[] = [];
 
-      for (const p of products) {
+      // Query active inventory across partner stores in the same category
+      const categoryProducts = await prisma.product.findMany({
+        where: {
+          category: topItem.category,
+        },
+        include: {
+          inventories: {
+            where: { stockLevel: { gt: 0 } },
+            include: { store: true },
+          },
+        },
+        take: 25,
+      });
+
+      for (const p of categoryProducts) {
         for (const inv of p.inventories) {
           if (p.id === topItem.id && inv.storeId === topItem.storeId) continue;
-          if (inv.stockLevel <= 0) continue;
 
           const cConf = calculateInventoryConfidence({
             productId: p.id,
@@ -121,23 +134,25 @@ export async function GET(req: NextRequest) {
             status: inv.status as any,
           });
 
-          candidateList.push({
-            id: p.id,
-            sku: p.sku,
-            name: p.name,
-            brand: p.brand,
-            category: p.category,
-            unit: p.unit,
-            mrp: p.mrp,
-            price: p.price,
-            storeId: inv.storeId,
-            storeName: inv.store.name,
-            storeLocality: inv.store.locality,
-            stockLevel: inv.stockLevel,
-            confidence: cConf.confidence,
-            storeFulfillmentRate: inv.store.historicalFulfillmentRate,
-            avgDeliveryMinutes: inv.store.avgDeliveryMinutes,
-          });
+          if (cConf.confidence > topItem.confidence) {
+            candidateList.push({
+              id: p.id,
+              sku: p.sku,
+              name: p.name,
+              brand: p.brand,
+              category: p.category,
+              unit: p.unit,
+              mrp: p.mrp,
+              price: p.price,
+              storeId: inv.storeId,
+              storeName: inv.store.name,
+              storeLocality: inv.store.locality,
+              stockLevel: inv.stockLevel,
+              confidence: cConf.confidence,
+              storeFulfillmentRate: inv.store.historicalFulfillmentRate,
+              avgDeliveryMinutes: inv.store.avgDeliveryMinutes,
+            });
+          }
         }
       }
 
