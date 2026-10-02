@@ -6,11 +6,24 @@ import path from "path";
 if (process.env.VERCEL) {
   try {
     const cwd = process.cwd();
-    const sourceDbPath = path.join(cwd, "dev.db");
+    const sourceCandidates = [
+      path.join(cwd, "prisma", "dev.db"),
+      path.join(cwd, "dev.db"),
+    ];
     const tmpDbPath = "/tmp/dev.db";
+    const tmpDir = path.dirname(tmpDbPath);
 
-    if (!fs.existsSync(tmpDbPath) && fs.existsSync(sourceDbPath)) {
-      fs.copyFileSync(sourceDbPath, tmpDbPath);
+    if (!fs.existsSync(tmpDir)) {
+      fs.mkdirSync(tmpDir, { recursive: true });
+    }
+
+    if (!fs.existsSync(tmpDbPath)) {
+      for (const src of sourceCandidates) {
+        if (fs.existsSync(src)) {
+          fs.copyFileSync(src, tmpDbPath);
+          break;
+        }
+      }
     }
 
     if (fs.existsSync(tmpDbPath)) {
@@ -28,6 +41,13 @@ const globalForPrisma = globalThis as unknown as {
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
+    datasources: process.env.VERCEL
+      ? {
+          db: {
+            url: "file:/tmp/dev.db",
+          },
+        }
+      : undefined,
     log: process.env.NODE_ENV === "development" ? ["warn", "error"] : ["error"],
   });
 
